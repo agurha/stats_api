@@ -1,10 +1,24 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 )
+
+type Response map[string]interface{}
+
+func (r Response) String() (s string) {
+	b, err := json.Marshal(r)
+	if err != nil {
+		s = ""
+		return
+	}
+	s = string(b)
+	return
+}
 
 type Series struct {
 }
@@ -59,7 +73,8 @@ func main() {
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
-		fmt.Println("Welcome to STATS API Server")
+		w.Header().Add("Content-Type", "application/json")
+		fmt.Fprint(w, Response{"success": true, "message": "Welcome to the STATS API SERVER!", "method": r.Method})
 	})
 
 	s := r.PathPrefix("/v1/series").Subrouter()
@@ -70,6 +85,6 @@ func main() {
 	e.HandleFunc("/", PostEvents).Methods("POST").Schemes("http")
 	e.HandleFunc("/{event_id}", GetEvents).Methods("GET").Schemes("http")
 
-	http.ListenAndServe(":1337", nil)
+	log.Fatal(http.ListenAndServe(":8080", r))
 
 }
